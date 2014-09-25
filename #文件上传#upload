@@ -1,0 +1,98 @@
+package com.kaishengit.web;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.List;
+import java.util.UUID;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.FileUploadException;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+
+
+public class UploadServlet extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+
+	
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		request.getRequestDispatcher("/WEB-INF/views/upload.jsp").forward(request, response);
+	}
+	
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		
+		//文件的存放位置
+		File uploadPos = new File("e:/uploads");
+		if(!uploadPos.exists()){
+			uploadPos.mkdir();
+		}
+		//设置一个上传的临时文件
+		File uploadTemp = new File("e:/uploadTemp");
+		if(!uploadTemp.exists()){
+			uploadTemp.mkdir();
+		}
+		if(ServletFileUpload.isMultipartContent(request)){
+			DiskFileItemFactory factory = new DiskFileItemFactory();
+			//设置缓冲区的大小
+			factory.setSizeThreshold(1024);
+			//设置临时文件
+			factory.setRepository(uploadTemp);
+			
+			ServletFileUpload servletFileUpload = new ServletFileUpload(factory);
+			servletFileUpload.setFileSizeMax(1024*1024*10);
+			String fileDesc = null;
+				try {
+					List<FileItem> fileItemList = servletFileUpload.parseRequest(request);
+					for(FileItem item : fileItemList){
+						if(item.isFormField()){
+							//普通文本
+							if("fileDesc".equals(item.getFieldName())){
+								fileDesc = item.getString("UTF-8");
+							}
+						}else{
+							//type=file
+							String contentType = item.getContentType();
+							String name = item.getName();
+							long size = item.getSize();
+							String nicesize = FileUtils.byteCountToDisplaySize(size);
+							
+							System.out.println("contentType: "+contentType+"name: "+name+"size: "+nicesize);
+							
+							name = UUID.randomUUID().toString() + name.substring(name.lastIndexOf("."));
+							IOUtils.copy(item.getInputStream(), new FileOutputStream(new File(uploadPos,name)));
+							
+							/*BufferedInputStream input = new BufferedInputStream(item.getInputStream());
+							BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(new File(uploadPos,name)));
+							
+							byte[] buffer = new byte[1024];
+							int len=-1;
+							
+							while((len = input.read(buffer))!= -1){
+								output.write(buffer);
+							}
+							
+							output.flush();
+							output.close();
+							input.close();*/
+						}
+					}
+				} catch (FileUploadException e) {
+					e.printStackTrace();
+				}
+		}
+		
+		
+	}
+
+}
