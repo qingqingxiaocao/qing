@@ -1,0 +1,44 @@
+package com.kaishengit.web;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.io.IOUtils;
+
+public class DownloadServlet extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		request.getRequestDispatcher("/WEB-INF/views/download.jsp").forward(request, response);
+	}
+	
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		String fileName = request.getParameter("fileDesc");
+		System.out.println(fileName);
+		if(!(fileName.equals("")&&fileName == null)){
+			File downloadFile = new File("e:/uploads",fileName);
+			if(!downloadFile.exists()){
+				response.sendError(404);
+			}else{
+				//设置相应的头部
+				response.setContentType("application/pdf");
+				//设置相应的长度
+				response.setContentLength(Long.valueOf(downloadFile.length()).intValue());
+				//中文名称处理
+				String downloadName = new String("javase文档.pdf".getBytes("UTF-8"),"ISO8859-1");
+				//弹出下载对话框，选择存放的地方
+				response.setHeader("Content-Disposition", "attachment;filename=\""+downloadName+"\"");
+				//文件的输入流变成响应的输出流
+				IOUtils.copy(new FileInputStream(downloadFile), response.getOutputStream());
+			}
+		}else{
+			response.sendError(404);
+		}
+	}
+}
