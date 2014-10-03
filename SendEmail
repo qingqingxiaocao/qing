@@ -1,0 +1,44 @@
+package com.kaishengit.web;
+
+import java.io.IOException;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.mail.EmailException;
+import org.apache.commons.mail.SimpleEmail;
+
+public class SendEmailServlet extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		request.getRequestDispatcher("/WEB-INF/views/sendemail.jsp").forward(request, response);
+	}
+
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		
+		String adress = request.getParameter("address");
+		System.out.println(adress);
+		
+		SimpleEmail email = new SimpleEmail();
+		//HtmlEmail email = new HtmlEmail();
+		email.setHostName("smtp.qq.com");
+		email.setAuthentication("qq号", "密码");
+		email.setCharset("UTF-8");
+		email.setTLS(true);
+		
+		try {
+			email.setFrom("qq号@qq.com");
+			email.setSubject("试发邮件");
+			email.setMsg("希望试发成功");
+			//email.setHtmlMsg("希望试发成功");
+			email.addTo(adress);
+			email.send();
+		} catch (EmailException e) {
+			e.printStackTrace();
+		}
+		response.sendRedirect("/home.do");
+	}
+
+}
