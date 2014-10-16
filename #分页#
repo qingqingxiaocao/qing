@@ -1,0 +1,93 @@
+//util包
+
+
+
+package com.kaishengit.util;
+
+import java.util.List;
+
+public class Page<T> {
+
+	private int pageSize;
+	private int pageNo;
+	private int totalPages;
+	private int totalCounts;
+	
+	private List<T> items;
+	public int getPageSize() {
+		return pageSize;
+	}
+	public void setPageSize(int pageSize) {
+		this.pageSize = pageSize;
+	}
+	public int getPageNo() {
+		return pageNo;
+	}
+	public void setPageNo(String pageNo) {
+		
+		if(StringUtil.isNumber(pageNo)) {
+			int tempNo = Integer.parseInt(pageNo);
+			if(tempNo < 1) {
+				tempNo = 1;
+			} else if(tempNo > getTotalPages()) {
+				tempNo = getTotalPages();
+			}
+			this.pageNo = tempNo;	
+		} else {
+			this.pageNo = 1;
+		}
+	}
+	public int getTotalPages() {
+		return totalPages;
+	}
+	public void setTotalPages(int totalPages) {
+		if(getTotalCounts() % getPageSize() == 0){
+			this.totalPages = getTotalCounts() / getPageSize();
+		}else{
+			this.totalPages = getTotalCounts() / getPageSize() + 1;
+		}
+	}
+	public int getTotalCounts() {
+		return totalCounts;
+	}
+	public void setTotalCounts(int totalCounts) {
+		this.totalCounts = totalCounts;
+		
+		this.totalPages = totalCounts / getPageSize();
+		if(this.totalCounts % this.pageSize != 0){
+			this.totalPages = this.totalCounts/this.pageSize + 1;
+		}
+	}
+	public List<T> getItems() {
+		return items;
+	}
+	public void setItems(List<T> items) {
+		this.items = items;
+	}
+	public int getFrom() {
+		return (getPageNo()-1)*getPageSize();
+	}
+	
+	public Page(){}
+	
+	public Page(int pageSize,int totalCounts,String pageNo){
+
+		setPageSize(pageSize);
+		setTotalCounts(totalCounts);
+		setPageNo(pageNo);
+		
+	}
+	
+}
+
+
+//dao包
+public Page<Active> findAll(Long projectId, String pageNo) {
+
+		String sql = "select * from active where projectId=? order by id desc limit ?,?";
+		
+		Page<Active> page = new Page<Active>(6, findRecordsCountByAccountId(Long.valueOf(projectId)),pageNo);
+		List<Active> items = db.queryForList(sql, new BeanRowMapper<Active>(Active.class), pageNo);
+		page.setItems(items);
+		return page;
+	}
